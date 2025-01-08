@@ -1,4 +1,4 @@
-module github.com.com/ihatiko/go-chef-clients-transports/daemon
+module github.com/ihatiko/go-chef-clients-transports/daemon
 
 go 1.23.4
 
