@@ -36,7 +36,7 @@ type Request struct {
 }
 
 func (c *Request) Context() context.Context {
-	return c.Context()
+	return c.ctx
 }
 
 type h func(context Request) error
