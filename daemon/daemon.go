@@ -120,7 +120,6 @@ func (t Transport) handler(id int) {
 				return
 			}
 			if errors.Is(ctx.Err(), context.Canceled) {
-				slog.Warn("context cancelled daemon")
 				return
 			}
 			if ctx.Err() != nil {
