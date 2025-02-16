@@ -3,22 +3,20 @@ package daemon
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/ihatiko/go-chef-core-sdk/iface"
+	"github.com/ihatiko/go-chef-core-sdk/types"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"log/slog"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 const (
 	defaultTimeout  = 10 * time.Second
 	defaultInterval = 10 * time.Second
 	defaultWorker   = 1
-	componentName   = "daemon"
+	key             = "daemon"
 )
 
 // TODO exec metrics
@@ -42,19 +40,32 @@ func (c *Request) Context() context.Context {
 type h func(context Request) error
 
 type Transport struct {
+	types.Component
 	Config *Config
 	h      h
 	Ticker *time.Ticker
 }
 type Options func(*Transport)
 
-func (t Transport) Name() string {
-	return fmt.Sprintf("%s id: %s", componentName, uuid.New().String())
+func (t Transport) GetKey() string {
+	return key
 }
 
+type Details struct {
+	Timeout  time.Duration `json:"timeout"`
+	Interval time.Duration `json:"interval"`
+	Workers  int           `json:"workers"`
+}
+
+func (t Transport) Details() any {
+	return Details{
+		Interval: t.Config.Interval,
+		Timeout:  t.Config.Timeout,
+		Workers:  t.Config.Workers,
+	}
+}
 func (cfg *Config) Setup(fn h, opts ...Options) iface.IComponent {
 	t := new(Transport)
-
 	t.Config = cfg
 	for _, opt := range opts {
 		opt(t)
@@ -70,7 +81,7 @@ func (cfg *Config) Setup(fn h, opts ...Options) iface.IComponent {
 		t.Config.Workers = defaultWorker
 	}
 	t.h = fn
-	return *t
+	return t
 }
 
 func (t Transport) Routing(fn h) Transport {
